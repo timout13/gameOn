@@ -16,18 +16,16 @@ const form = document.querySelector("form");
 const formBtnSubmit = document.querySelector(".btn-submit");
 let formInputs = {};
 
-console.log(form.elements);
 for (const field of form.elements) {
-  if (field.name != "location") {
-    formInputs = {
-      ...formInputs,
-      [field.name]: {
-        state: false,
-        errors: field.type,
-      },
-    };
-  }
+  formInputs = {
+    ...formInputs,
+    [field.name]: {
+      state: false,
+      errors: field.type,
+    },
+  };
 }
+delete formInputs[""];
 
 const checkingRules = {
   first: {
@@ -40,15 +38,29 @@ const checkingRules = {
     errorMessage:
       "Entrer une chaîne de caractères,supérieur à 3 et inférieur à 20. Elle ne doit pas comporter de caractères spéciaux.",
   },
+  email: {
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    errorMessage: "Entrer un email valide.",
+  },
+  birthdate: {
+    pattern: /^[a-zA-ZÀ-ÿ-]{3,20}$/,
+    date: Date.now(),
+    errorMessage: "Entrer une date postérieure à demain.",
+  },
+  quantity: {
+    pattern: /^(?:100|\d{1,2})$/,
+    errorMessage: "Entrer le nombre de tournois effectués.",
+  },
+  location: {
+    isChecked: true,
+    errorMessage: "Cocher le tournois qui vous intéresse.",
+  },
+  condition: {
+    isChecked: true,
+    errorMessage: "Cocher les conditions d'utilisations.",
+  },
 };
-const errors = {
-  text: "Entrer une chaîne de caractères,supérieur à 3 et inférieur à 20. Elle ne doit pas comporter de caractères spéciaux.",
-  email: ["Error email 1", "Error email 2"],
-  number: ["Error number 1", "Error number 2"],
-  radio: ["Error radio 1", "Error radio 2"],
-  checkbox: ["Error checkbox 1", "Error checkbox 2"],
-};
-console.log(formInputs);
+
 // launch modal form
 function launchModal() {
   modalbg.classList.add("modalwrapper--show");
@@ -58,60 +70,73 @@ function closeModal() {
 }
 
 /* Form */
-function handleError(errorText, target) {
-  // If querySelector id= name[targetName] &&  paragraph = querySelector id= name[targetName]
-  let errorParagraph = document.querySelector(`#error\\[${target.name}\\]`);
-  //else
-  if (!errorParagraph) {
-    errorParagraph = document.createElement("p");
-    errorParagraph.id = `error[${target.name}]`;
-    errorParagraph.classList.add("form_error");
+function isFormValid() {
+  let countError = 0;
+  for (let key in formInputs) {
+    if (formInputs[key].state == false) {
+      countError++;
+    }
   }
-  errorParagraph.innerHTML = `${errorText}`;
-  target.after(errorParagraph);
+  if (countError == 0) {
+    formBtnSubmit.disabled = false;
+    formBtnSubmit.classList.remove("btn--disabled");
+  } else {
+    formBtnSubmit.disabled = true;
+    formBtnSubmit.classList.add("btn--disabled");
+  }
+}
+function handleError(errorText, target, isVisible) {
+  let errorParagraph = target.parentNode;
+  errorParagraph.setAttribute("data-error-visible", isVisible);
+  errorParagraph.setAttribute("data-error", errorText);
 }
 function handleForm(e) {
   const rule = checkingRules[e.target.name];
-  if (rule) {
+
+  if (
+    rule &&
+    rule != checkingRules.condition &&
+    rule != checkingRules.location
+  ) {
     const testing = rule.pattern.test(e.target.value);
-    if (testing) {
+
+    if (rule.date) {
+      let correctDate = Date.parse(e.target.value) < rule.date;
+      if (correctDate) {
+        formInputs[e.target.name].state = true;
+        handleError("", e.target, false);
+      } else {
+        formInputs[e.target.name].state = false;
+        handleError(rule.errorMessage, e.target, true);
+      }
+    } else if (testing) {
       formInputs[e.target.name].state = true;
-      handleError("", e.target);
+      handleError("", e.target, false);
     } else {
       formInputs[e.target.name].state = false;
-      handleError(rule.errorMessage, e.target);
+      handleError(rule.errorMessage, e.target, true);
+    }
+  } else if (
+    (rule && rule == checkingRules.condition) ||
+    rule == checkingRules.location
+  ) {
+    if (e.target.checked) {
+      formInputs[e.target.name].state = true;
+      handleError("", e.target, false);
+    } else {
+      formInputs[e.target.name].state = false;
+      handleError(rule.errorMessage, e.target, true);
     }
   }
-  /*
 
-  if (e.target.name === "first") {
-    let pattern = /^[a-zA-ZÀ-ÿ-]{3,20}$/;
-
-    if (!pattern.test(e.target.value)) {
-      formInputs.first.state = false;
-      handleError(errors.text, e.target);
-    } else {
-      formInputs.first.state = true;
-      handleError("", e.target);
-    }
-  } else if (e.target.name === "last") {
-    let pattern = /^[a-zA-ZÀ-ÿ-]{3,20}$/;
-
-    if (!pattern.test(e.target.value)) {
-      formInputs.last.state = false;
-      handleError(errors.text, e.target);
-    } else {
-      formInputs.first.state = true;
-      handleError("", e.target);
-    }*/
+  isFormValid();
 }
-/* ifelse (e.target.name === "birthdate"){
-    // getTime() or toStringIso()
-  } */
 
 // launch modal event
 modalBtn.forEach((btn) => btn.addEventListener("click", launchModal));
 modalCloseBtn.forEach((btn) => btn.addEventListener("click", closeModal));
 // Watch Form
-formBtnSubmit.addEventListener("click", () => {});
+formBtnSubmit.addEventListener("click", (e) => {
+  e.preventDefault();
+});
 form.addEventListener("change", handleForm);

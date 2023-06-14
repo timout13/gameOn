@@ -342,6 +342,9 @@ input[data-error]::after {
   cursor: pointer;
   border: 0;
 }
+.btn--disabled {
+  background-color: #837c7d;
+}
 /* custom select styles */
 .custom-select {
   position: relative;
