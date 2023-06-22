@@ -90,6 +90,10 @@ function handleError(errorText, target, isVisible) {
   errorParagraph.setAttribute("data-error-visible", isVisible);
   errorParagraph.setAttribute("data-error", errorText);
 }
+const handleTesting = (msg, target, visibility, state) => {
+  formInputs[target.name].state = state;
+  handleError(msg, target, visibility);
+};
 function handleForm(e) {
   const rule = checkingRules[e.target.name];
 
@@ -99,44 +103,50 @@ function handleForm(e) {
     rule != checkingRules.location
   ) {
     const testing = rule.pattern.test(e.target.value);
-
+    //Refacto
     if (rule.date) {
       let correctDate = Date.parse(e.target.value) < rule.date;
       if (correctDate) {
-        formInputs[e.target.name].state = true;
-        handleError("", e.target, false);
+        handleTesting("", e.target, false, true);
       } else {
-        formInputs[e.target.name].state = false;
-        handleError(rule.errorMessage, e.target, true);
+        handleTesting(rule.errorMessage, e.target, true, false);
       }
     } else if (testing) {
-      formInputs[e.target.name].state = true;
-      handleError("", e.target, false);
+      handleTesting("", e.target, false, true);
     } else {
-      formInputs[e.target.name].state = false;
-      handleError(rule.errorMessage, e.target, true);
+      handleTesting(rule.errorMessage, e.target, true, false);
     }
   } else if (
     (rule && rule == checkingRules.condition) ||
     rule == checkingRules.location
   ) {
     if (e.target.checked) {
-      formInputs[e.target.name].state = true;
-      handleError("", e.target, false);
+      handleTesting("", e.target, false, true);
     } else {
-      formInputs[e.target.name].state = false;
-      handleError(rule.errorMessage, e.target, true);
+      handleTesting(rule.errorMessage, e.target, true, false);
     }
   }
-
   isFormValid();
 }
+
+const afterSubmission = (e) => {
+  e.preventDefault();
+  let modalBody = document.querySelector(".modal-body");
+  let p = document.createElement("p");
+  let btn = document.createElement("button");
+  btn.classList.add("btn-signup");
+  btn.classList.add("modal-btn");
+  btn.innerText = "Fermer";
+  btn.addEventListener("click", closeModal);
+  p.innerText = "Merci d'avoir réserver !";
+  form.remove();
+  modalBody.append(p);
+  modalBody.append(btn);
+};
 
 // launch modal event
 modalBtn.forEach((btn) => btn.addEventListener("click", launchModal));
 modalCloseBtn.forEach((btn) => btn.addEventListener("click", closeModal));
 // Watch Form
-formBtnSubmit.addEventListener("click", (e) => {
-  e.preventDefault();
-});
+formBtnSubmit.addEventListener("click", afterSubmission);
 form.addEventListener("change", handleForm);
