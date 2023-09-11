@@ -344,6 +344,7 @@ input[data-error]::after {
 }
 .btn--disabled {
   background-color: #837c7d;
+  pointer-events: none;
 }
 /* custom select styles */
 .custom-select {
