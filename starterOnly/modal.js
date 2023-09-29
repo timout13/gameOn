@@ -15,17 +15,18 @@ const formData = document.querySelectorAll(".formData");
 const form = document.querySelector("form");
 const formBtnSubmit = document.querySelector(".btn-submit");
 let formInputs = {};
+let data = {};
 
 for (const field of form.elements) {
   formInputs = {
     ...formInputs,
     [field.name]: {
       state: false,
-      errors: field.type,
     },
   };
 }
 delete formInputs[""];
+delete formInputs["newsletter"];
 
 const checkingRules = {
   first: {
@@ -45,7 +46,7 @@ const checkingRules = {
   birthdate: {
     pattern: /^[a-zA-ZÀ-ÿ-]{3,20}$/,
     date: Date.now(),
-    errorMessage: "Entrer une date postérieure à demain.",
+    errorMessage: "Entrer une date correcte.",
   },
   quantity: {
     pattern: /^(?:100|\d{1,2})$/,
@@ -85,34 +86,37 @@ function isFormValid() {
     formBtnSubmit.classList.add("btn--disabled");
   }
 }
+
 function handleError(errorText, target, isVisible) {
   let errorParagraph = target.parentNode;
   errorParagraph.setAttribute("data-error-visible", isVisible);
   errorParagraph.setAttribute("data-error", errorText);
 }
+
 const handleTesting = (msg, target, visibility, state) => {
   formInputs[target.name].state = state;
   handleError(msg, target, visibility);
 };
+
 function handleForm(e) {
   const rule = checkingRules[e.target.name];
-
   if (
     rule &&
     rule != checkingRules.condition &&
     rule != checkingRules.location
   ) {
     const testing = rule.pattern.test(e.target.value);
-    //Refacto
     if (rule.date) {
       let correctDate = Date.parse(e.target.value) < rule.date;
       if (correctDate) {
         handleTesting("", e.target, false, true);
+        data = { ...data, [e.target.name]: e.target.value };
       } else {
         handleTesting(rule.errorMessage, e.target, true, false);
       }
     } else if (testing) {
       handleTesting("", e.target, false, true);
+      data = { ...data, [e.target.name]: e.target.value };
     } else {
       handleTesting(rule.errorMessage, e.target, true, false);
     }
@@ -131,6 +135,8 @@ function handleForm(e) {
 
 const afterSubmission = (e) => {
   e.preventDefault();
+  let newsletterCheckbox = document.querySelector("[name='newsletter']");
+  data = { ...data, [newsletterCheckbox.name]: newsletterCheckbox.checked };
   let modalBody = document.querySelector(".modal-body");
   let p = document.createElement("p");
   let btn = document.createElement("button");
@@ -139,6 +145,7 @@ const afterSubmission = (e) => {
   btn.innerText = "Fermer";
   btn.addEventListener("click", closeModal);
   p.innerText = "Merci d'avoir réserver !";
+  console.log(data);
   form.remove();
   modalBody.append(p);
   modalBody.append(btn);
