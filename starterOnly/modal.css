@@ -52,6 +52,10 @@ img {
 .header-logo {
   float: left;
 }
+.header-logo img {
+  width: 100%;
+    height: auto;
+}
 .main-navbar {
   float: right;
 }
